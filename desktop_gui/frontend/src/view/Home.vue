@@ -55,7 +55,12 @@
         <n-list bordered>
           <n-list-item v-for="log in logs">
             <n-thing>
-              <div style="word-wrap: break-word;">{{ log }}</div>
+              <template #description>
+                <div style="font-size: 12px; color: #999; margin-bottom: 4px;">
+                  {{ formatRelativeTime(log.timestamp || Date.now()) }}
+                </div>
+              </template>
+              <div style="word-wrap: break-word;" v-html="convertLinksToHtml(log)" @click="handleLogClick"></div>
             </n-thing>
             <template #suffix>
               <n-button @click="copyText(log)">复制</n-button>
@@ -80,7 +85,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { SelectOption, useMessage } from 'naive-ui'
 import { GetIPList, InitListener, LoadConfig, SaveConfig } from "../../wailsjs/go/main/App";
 import { computed } from 'vue';
@@ -113,6 +118,7 @@ const status = computed(() => store.state.status);
 const options = ref<any[]>([]);
 const qrcode_text = ref('柠檬Push，请先选择IP')
 const show_qrcode = ref(false)
+const timeUpdateKey = ref(0) // 用于强制更新时间显示
 const loadConfig = () => {
   if (!status.value) {
     message.loading(
@@ -139,7 +145,7 @@ const loadConfig = () => {
       console.log(e);
     })
     runtime.EventsOn('showLogs', (log: any) => {
-      store.state.logs.unshift(log)
+      store.commit('addLog', log);
     });
   }
 }
@@ -174,10 +180,67 @@ const genQRCode = () => {
   showModal.value = true
 }
 
-const copyText = (text: string) => {
-  navigator.clipboard.writeText(text).then(res => {
+const copyText = (text: string | {content: string, timestamp: number}) => {
+  // 如果传入的是对象，提取内容；如果是字符串，直接使用
+  let content: string;
+  if (typeof text === 'object' && text !== null) {
+    content = text.content || '';
+  } else {
+    content = text as string;
+  }
+  navigator.clipboard.writeText(content).then(res => {
     message.success('复制成功')
   })
+}
+
+const convertLinksToHtml = (log: string | {content: string, timestamp: number}) => {
+  // 提取文本内容
+  let text: string;
+  if (typeof log === 'object' && log !== null) {
+    text = log.content || '';
+  } else {
+    text = log as string;
+  }
+  
+  // 匹配URL的正则表达式
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  // 将URL替换为可点击的链接，使用data-url属性存储URL
+  return text.replace(urlRegex, '<a href="#" class="log-link" data-url="$1" style="color: #1890ff; text-decoration: underline; cursor: pointer;">$1</a>');
+}
+
+const formatRelativeTime = (timestamp: number) => {
+  // 使用timeUpdateKey来强制Vue重新计算
+  const key = timeUpdateKey.value;
+  const now = Date.now();
+  const diff = now - timestamp;
+  
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  
+  if (seconds < 60) {
+    return '刚刚';
+  } else if (minutes < 60) {
+    return `${minutes}分钟前`;
+  } else if (hours < 24) {
+    return `${hours}小时前`;
+  } else {
+    return `${days}天前`;
+  }
+}
+
+// 处理日志点击事件
+const handleLogClick = (event: Event) => {
+  const target = event.target as HTMLElement;
+  if (target.classList.contains('log-link')) {
+    event.preventDefault();
+    const url = target.getAttribute('data-url');
+    if (url) {
+      // 使用Wails运行时打开URL
+      runtime.BrowserOpenURL(url);
+    }
+  }
 }
 
 const toOptions = (list: string[]) => {
@@ -215,6 +278,22 @@ const saveConfig = (e: any) => {
 }
 loadConfig()
 reFreshIp()
+
+// 添加定时器，每30秒更新一次时间显示
+let timeInterval: number | null = null;
+
+onMounted(() => {
+  // 每30秒更新一次时间显示
+  timeInterval = window.setInterval(() => {
+    timeUpdateKey.value++;
+  }, 30000);
+});
+
+onUnmounted(() => {
+  if (timeInterval) {
+    clearInterval(timeInterval);
+  }
+});
 
 
 </script>

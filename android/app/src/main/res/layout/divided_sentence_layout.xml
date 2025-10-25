@@ -1,22 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/transparent">
+<!-- 把原来的 LinearLayout 或 ConstraintLayout 根节点用 ScrollView 包起来 -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:scrollbars="vertical"
+    android:padding="16dp">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="20dp"
-        android:orientation="vertical"
+        android:orientation="vertical" android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:background="@color/transparent">
 
-        <net.lemontree.push.DivideCard
-            android:id="@+id/divide_layout"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:layout_margin="20dp"
+            android:orientation="vertical"
+            android:background="@color/transparent">
 
-        </net.lemontree.push.DivideCard>
+            <net.lemontree.push.DivideCard
+                android:id="@+id/divide_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            </net.lemontree.push.DivideCard>
+        </LinearLayout>
+
     </LinearLayout>
-
-</LinearLayout>
+</ScrollView>
