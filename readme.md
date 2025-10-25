@@ -99,12 +99,6 @@ LemonPush is an efficient tool for pushing text from your mobile device to your 
 
 [Telegram](https://t.me/+ZVIwHSBOg1o5NzFl)
 
-微信订阅号【折腾星人】
+微信订阅号
 
-![wx](https://lemontree.one/files/images/wxdy.png)
-
-## 支持开发者
-
-柠檬Push如你对有所帮助，欢迎star、PR、feedback、share、donate支持开发者
-
-![zw](https://raw.githubusercontent.com/lemon-codehub/lemonPush/master/docs/static/img/zw.jpg)
+![wx](https://img.lemontree.one/i/2025/10/25/gox6fu.jpg)
