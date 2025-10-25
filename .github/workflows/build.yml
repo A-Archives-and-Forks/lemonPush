@@ -41,6 +41,7 @@ jobs:
       with:
         node-version: '18'
         cache: 'yarn'
+        cache-dependency-path: 'desktop_gui/yarn.lock'
         
     - name: Setup Go
       uses: actions/setup-go@v4
@@ -64,6 +65,7 @@ jobs:
     - name: Update version in wails.json
       run: |
         # Update version in wails.json
+        cd desktop_gui
         if [[ "$RUNNER_OS" == "macOS" ]]; then
           sed -i '' 's/"productVersion": "[^"]*"/"productVersion": "'$VERSION'"/' wails.json
         else
@@ -73,32 +75,32 @@ jobs:
       shell: bash
       
     - name: Install frontend dependencies
-      run: yarn install
+      run: cd desktop_gui && yarn install
       
     - name: Build application
-      run: wails build -platform ${{ matrix.platform }} -clean
+      run: cd desktop_gui && wails build -platform ${{ matrix.platform }} -clean
       
     - name: Prepare artifacts (Windows)
       if: matrix.os == 'windows-latest'
       run: |
         mkdir -p release
-        copy "build\bin\${{ env.APP_NAME }}.exe" "release\${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_windows_amd64.exe"
+        copy "desktop_gui\build\bin\${{ env.APP_NAME }}.exe" "release\${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_windows_amd64.exe"
         # Copy any DLL files if they exist
-        if exist "build\bin\*.dll" copy "build\bin\*.dll" "release\"
+        if exist "desktop_gui\build\bin\*.dll" copy "desktop_gui\build\bin\*.dll" "release\"
       shell: powershell
       
     - name: Prepare artifacts (macOS)
       if: matrix.os == 'macos-latest'
       run: |
         mkdir -p release
-        cp "build/bin/${{ env.APP_NAME }}" "release/${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_darwin_arm64"
+        cp "desktop_gui/build/bin/${{ env.APP_NAME }}" "release/${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_darwin_arm64"
       shell: bash
       
     - name: Prepare artifacts (Linux)
       if: matrix.os == 'ubuntu-latest'
       run: |
         mkdir -p release
-        cp "build/bin/${{ env.APP_NAME }}" "release/${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_linux_amd64"
+        cp "desktop_gui/build/bin/${{ env.APP_NAME }}" "release/${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_linux_amd64"
       shell: bash
       
     - name: Create ZIP archive
