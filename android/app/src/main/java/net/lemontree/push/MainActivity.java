@@ -17,6 +17,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Build;
@@ -51,6 +52,7 @@ import java.net.Socket;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import jackmego.com.jieba_android.JiebaSegmenter;
 import okhttp3.Call;
@@ -81,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private final String LAST_PC_KEY = "lastPC";
+    private final String AUTO_OPERATION_MODE_KEY = "autoOperationMode";
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
@@ -106,13 +109,36 @@ public class MainActivity extends AppCompatActivity {
                         .map(pcClient -> pcClient.getIp() + ":" + pcClient.getPort())
                         .toArray(String[]::new);
                 alertBuilder.setTitle("电脑选择");
-                alertBuilder.setSingleChoiceItems(names, selectPC, (dialogInterface, i) -> {
+                // 使用保存的上次选择作为默认选中项
+                int lastSelectedPC = pcListSp.getInt(LAST_PC_KEY, 0);
+                alertBuilder.setSingleChoiceItems(names, lastSelectedPC, (dialogInterface, i) -> {
+                    PCClient selectedPC = pcClientList.get(i);
+                    // 立即显示选中的电脑和连接中状态
                     selectPC = i;
+                    infoTv.setText("连接中：" + selectedPC.getIp() + ":" + selectedPC.getPort());
+                    infoTv.setTextColor(Color.GRAY);
+                    dialogInterface.dismiss();
                     SharedPreferences.Editor editor = pcListSp.edit();
                     editor.putInt(LAST_PC_KEY, selectPC);
                     editor.apply();
-                    infoTv.setText("电脑端：" + pcClientList.get(selectPC).getIp() + ":" + pcClientList.get(selectPC).getPort());
-                    dialogInterface.dismiss();
+                    
+                    // 检查连通性
+                    checkPCConnection(selectedPC, new ConnectionCallback() {
+                        @Override
+                        public void onSuccess() {
+
+                            infoTv.setText("已连接：" + selectedPC.getIp() + ":" + selectedPC.getPort());
+                            infoTv.setTextColor(Color.BLACK);
+                            Toast.makeText(MainActivity.this, "连接成功", Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onFailure() {
+                            infoTv.setText("连接失败：" + selectedPC.getIp() + ":" + selectedPC.getPort());
+                            infoTv.setTextColor(Color.RED);
+                            Toast.makeText(MainActivity.this, "连接失败，请检查电脑端程序是否运行", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 });
                 alertBuilder.create().show();
             }
@@ -120,7 +146,24 @@ public class MainActivity extends AppCompatActivity {
         });
 
         autoOperationItems = getResources().getStringArray(R.array.auto_operation_array);
-        autoOperationBtn.setText(autoOperationItems[0]);
+        // 从SharedPreferences读取保存的操作模式
+        autoOperation = sp.getInt(AUTO_OPERATION_MODE_KEY, 0);
+        autoOperationBtn.setText(autoOperationItems[autoOperation]);
+        // 如果保存的模式是悬浮窗模式，需要创建悬浮窗
+        if (autoOperation == 3 || autoOperation == 4) {
+            // 延迟创建悬浮窗，确保权限检查完成
+            handler.postDelayed(() -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+                    // 权限未授予，重置为无操作模式
+                    autoOperation = 0;
+                    autoOperationBtn.setText(autoOperationItems[0]);
+                    sp.edit().putInt(AUTO_OPERATION_MODE_KEY, 0).apply();
+                } else {
+                    // 权限已存在，创建悬浮窗
+                    createFloatWindow();
+                }
+            }, 1000);
+        }
         autoOperationBtn.setOnClickListener(view->{
             AlertDialog.Builder alertBuilder = new AlertDialog.Builder(context);
             alertBuilder.setTitle("请选择自动操作");
@@ -151,6 +194,10 @@ public class MainActivity extends AppCompatActivity {
         int prevMode = autoOperation;
         autoOperation = which;
         autoOperationBtn.setText(autoOperationItems[which]);
+        // 保存选择的操作模式到SharedPreferences
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putInt(AUTO_OPERATION_MODE_KEY, which);
+        editor.apply();
         if(which == 3 || which == 4){
             if(!chooseFloatWindow(which)){
                 chooseAutoOperationMode(prevMode);
@@ -296,14 +343,33 @@ public class MainActivity extends AppCompatActivity {
         String json = pcListSp.getString("PCList", "");
         if (json != null && !json.equals("")) {
             List<PCClient> list = gson.fromJson(json, listType);
-            if (list.size() > 0) {
+            if (!list.isEmpty()) {
                 pcClientList.clear();
                 pcClientList.addAll(list);
                 selectPC = pcListSp.getInt(LAST_PC_KEY, 0);
-                infoTv.setText("电脑端：" + pcClientList.get(selectPC).getIp() + ":" + pcClientList.get(selectPC).getPort());
+                
+                // 显示连接中状态
+                PCClient currentPC = pcClientList.get(selectPC);
+                infoTv.setText("连接中：" + currentPC.getIp() + ":" + currentPC.getPort());
+                infoTv.setTextColor(Color.GRAY);
+                
+                // 检查实际连接状态
+                checkPCConnection(currentPC, new ConnectionCallback() {
+                    @Override
+                    public void onSuccess() {
+                        infoTv.setText("已连接：" + currentPC.getIp() + ":" + currentPC.getPort());
+                        infoTv.setTextColor(Color.BLACK);
+                    }
+
+                    @Override
+                    public void onFailure() {
+                        infoTv.setText("连接失败：" + currentPC.getIp() + ":" + currentPC.getPort());
+                        infoTv.setTextColor(Color.RED);
+                    }
+                });
             }
         }
-        if (pcClientList.size() > 0) {
+        if (!pcClientList.isEmpty()) {
             String share = "";
             if (Intent.ACTION_SEND.equals(action)) {
                 share = intent.getStringExtra(Intent.EXTRA_TEXT);
@@ -312,9 +378,9 @@ public class MainActivity extends AppCompatActivity {
                 share = intent.getDataString();
             }
             String finalShare = share;
-            if (!finalShare.equals("")) {
+            if (!"".equals(finalShare)) {
                 new Thread(() -> {
-                    if (sendToPC(toUrl(pcClientList.get(selectPC)) + "/get_clipboard", finalShare)) {
+                    if (sendToPC(toUrl(pcClientList.get(selectPC)) + "/set_clipboard", finalShare)) {
                         handler.post(() -> {
                                     Toast.makeText(MainActivity.this, "发送成功", Toast.LENGTH_SHORT).show();
                                     finish();
@@ -372,6 +438,43 @@ public class MainActivity extends AppCompatActivity {
 
     private String toUrl(PCClient pcClient) {
         return "http://" + pcClient.getIp() + ":" + pcClient.getPort();
+    }
+
+    private void checkPCConnection(PCClient pcClient, ConnectionCallback callback) {
+        new Thread(() -> {
+            try {
+                OkHttpClient client = new OkHttpClient.Builder()
+                        .connectTimeout(3, TimeUnit.SECONDS)
+                        .readTimeout(3, TimeUnit.SECONDS)
+                        .build();
+                
+                Request request = new Request.Builder()
+                        .url(toUrl(pcClient) + "/ping")
+                        .build();
+                
+                Call call = client.newCall(request);
+                Response response = call.execute();
+                
+                if (response.isSuccessful()) {
+                    String json = response.body().string();
+                    JsonParser parser = new JsonParser();
+                    JsonElement jsonElement = parser.parse(json);
+                    if (jsonElement.getAsJsonObject().get("code").getAsInt() == 0) {
+                        runOnUiThread(() -> callback.onSuccess());
+                        return;
+                    }
+                }
+                runOnUiThread(() -> callback.onFailure());
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() -> callback.onFailure());
+            }
+        }).start();
+    }
+
+    interface ConnectionCallback {
+        void onSuccess();
+        void onFailure();
     }
 
     @Override
@@ -482,7 +585,26 @@ public class MainActivity extends AppCompatActivity {
                             selectPC = pcClientList.size() - 1;
                         }
                         pcListSp.edit().putInt(LAST_PC_KEY, selectPC).apply();
-                        infoTv.setText("电脑端：" + pcClientList.get(selectPC).getIp() + ":" + pcClientList.get(selectPC).getPort());
+                         // 立即显示连接中状态
+                         infoTv.setText("连接中：" + pcClient.getIp() + ":" + pcClient.getPort());
+                         infoTv.setTextColor(Color.GRAY);
+                         
+                         // 对新添加的电脑进行连通性检查
+                         checkPCConnection(pcClient, new ConnectionCallback() {
+                             @Override
+                             public void onSuccess() {
+                                 infoTv.setText("已连接：" + pcClient.getIp() + ":" + pcClient.getPort());
+                                 infoTv.setTextColor(Color.BLACK);
+                                 Toast.makeText(MainActivity.this, "连接成功", Toast.LENGTH_SHORT).show();
+                             }
+ 
+                             @Override
+                         public void onFailure() {
+                             infoTv.setText("连接失败：" + pcClient.getIp() + ":" + pcClient.getPort());
+                             infoTv.setTextColor(Color.RED);
+                             Toast.makeText(MainActivity.this, "连接失败，请检查电脑端程序是否运行", Toast.LENGTH_SHORT).show();
+                         }
+                         });
 
                     }
                 } else if (bundle.getInt(XQRCode.RESULT_TYPE) == XQRCode.RESULT_FAILED) {
@@ -510,11 +632,11 @@ public class MainActivity extends AppCompatActivity {
         } else if (item.getItemId() == R.id.set) {
             startActivity(new Intent(this, PCConfigActivity.class));
         } else if (item.getItemId() == R.id.guide) {
-            openUrl("https://sibtools.app/lemon_push/docs/intro");
+            openUrl("https://lemontree.one/sibtools/lemon_push/docs/intro/");
         } else if (item.getItemId() == R.id.sib_tools) {
-            openUrl("https://sibtools.app");
+            openUrl("https://lemontree.one/products.html");
         } else if (item.getItemId() == R.id.version) {
-            openUrl("https://sibtools.app/lemon_push/docs/version");
+            openUrl("https://lemontree.one/sibtools/lemon_push/docs/version/");
         } else if (item.getItemId() == R.id.scan) {
             requestCameraPermission();
         }

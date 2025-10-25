@@ -14,13 +14,8 @@
                 </div>
             </n-collapse-item>
             <n-collapse-item title="版本更新" name="4">
-                <div><n-a @click="openUrl('https://t.me/+ZVIwHSBOg1o5NzFl')">电报群</n-a>、微信订阅号【lemonTree杂货铺】发布更新版本</div>
-                <n-image style="margin-top: 12px;" width="60%" src="https://ishare20.net/files/images/wxdy.png" />
-            </n-collapse-item>
-            <n-collapse-item title="建议反馈" name="5">
-                <div><n-a
-                        @click="openUrl('https://support.qq.com/products/405982')">https://support.qq.com/products/405982</n-a>
-                </div>
+                <div><n-a @click="openUrl('https://t.me/+ZVIwHSBOg1o5NzFl')">电报群</n-a>、微信订阅号发布更新版本</div>
+                <n-image style="margin-top: 12px;" width="60%" src="https://img.lemontree.one/i/2025/10/25/gox6fu.jpg" />
             </n-collapse-item>
 
             <n-collapse-item title="开发者作品" name="6">
@@ -35,11 +30,6 @@
                         </template>
                     </n-card>
                 </div>
-            </n-collapse-item>
-            <n-collapse-item title="支持开发者" name="7">
-                柠檬Push如你对有所帮助，欢迎star、PR、feedback、share、donate<n-a
-                    @click="openUrl('https://sibtools.app/lemon_push/')">项目</n-a>支持开发者
-                <n-image style="margin-top: 12px;" width="60%" src="https://ishare20.net/files/images/zw.jpg" />
             </n-collapse-item>
         </n-collapse>
         <n-modal v-model:show="showModal" preset="card" :style="bodyStyle" title="扫码体验" size="huge" :bordered="false">
@@ -65,32 +55,20 @@ const dictionary: Map<number, string> = new Map([
 const bodyStyle = {
     width: '600px'
 }
-const imageUrl = ref('https://ishare20.net/files/images/gh_d34d2687b0a1_258.jpg')
+const imageUrl = ref('https://lemontree.one/files/images/gh_d34d2687b0a1_258.jpg')
 const showModal = ref(false)
 const productList = [
-    {
-        name: '七彩工具箱',
-        desc: '实用工具箱微信小程序',
-        type: 0,
-        link: 'https://ishare20.net/files/images/gh_d34d2687b0a1_258.jpg'
-    },
     {
         name: '便捷搜索',
         desc: '无需重输关键词一键切换搜索引擎',
         type: 1,
-        link: 'https://github.com/ishare20/SearchCrutch'
+        link: 'https://github.com/lemon-codehub/SearchCrutch'
     },
     {
         name: '今日愿景板',
         desc: '写下你的今日愿景，放置显而易见的位置',
         type: 2,
-        link: 'https://sibtools.app/vision_board'
-    },
-    {
-        name: '形式中文',
-        desc: 'A way to 降维 English text to be available',
-        type: 2,
-        link: 'https://ishare20.github.io/formalizedChinese/'
+        link: 'https://lemontree.one/sibtools/vision_board'
     }
 ]
 const viewProduct = (product: any) => {

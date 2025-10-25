@@ -7,9 +7,9 @@ LemonPush is an efficient tool for pushing text from your mobile device to your 
 - No GUI, no installation required, small size, and multi-platform support for computers.
 - Allows multiple mobile devices to push to the computer, and the app supports multiple computers.
 
-![lemonpush](https://sibtools.app/lemon_push/img/lemonpush.jpg)
+![lemonpush](https://lemontree.one/sibtools/lemon_push/img/lemonpush.jpg)
 
-## [Download (Including iOS Shortcuts) ↗](https://sibtools.app/lemon_push/docs/download)
+## [Download (Including iOS Shortcuts) ↗](https://lemontree.one/sibtools/lemon_push/docs/download)
 
 ## Configuration Guide
 After double-clicking to start the program on your computer, it will display the computer's IP. Install the LemonPush App on your phone, click to set the IP displayed on the computer side. If multiple IPs are displayed, use the IP of your local network (usually starts with 192). After filling in the computer's IP, click Push Clipboard to get the clipboard and push it to the computer side.

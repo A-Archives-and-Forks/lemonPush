@@ -13,11 +13,11 @@ sidebar_position: 1
 - 电脑端提供支持下载、上传文件接口
 - App支持扫码连接，无需手动输入
 
-![](https://ishare20.net/sibtools/lemon_push/img/gui_v1.0.5.1.png)
+![](https://lemontree.one/sibtools/lemon_push/img/gui_v1.0.5.1.png)
 
-![lemonpush](https://ishare20.net/sibtools/lemon_push/img/lemonpush.jpg)
+![lemonpush](https://lemontree.one/sibtools/lemon_push/img/lemonpush.jpg)
 
-## [下载地址(包含iOS快捷指令)](https://ishare20.net/sibtools/lemon_push/docs/download)
+## [下载地址(包含iOS快捷指令)](https://lemontree.one/sibtools/lemon_push/docs/download)
 
 ## 配置教程
 双击启动柠檬Push应用，Android端安装柠檬Push App，iOS端使用快捷指令，电脑端柠檬Push点击生成二维码，Android手机扫码匹配即可使用，iOS端修改快捷指令的IP为电脑IP即可使用
@@ -101,22 +101,13 @@ sidebar_position: 1
 
 请不要从第三方平台下载软件，本项目代码开源，第三方平台的软件下载使用可能会被加入恶意代码导致信息泄露
 
-## 建议反馈
-欢迎在兔小巢建议反馈
-
-[https://support.qq.com/products/405982](https://support.qq.com/products/405982)
 
 电报群
 
 [Telegram](https://t.me/+ZVIwHSBOg1o5NzFl)
 
-微信订阅号【lemonTree杂货铺】
+微信订阅号
 
-![wx](https://ishare20.net/files/images/wxdy.png)
+![wx](https://img.lemontree.one/i/2025/10/25/gox6fu.jpg)
 
-## 支持开发者
-
-柠檬Push如你对有所帮助，欢迎star、PR、feedback、share、donate支持开发者
-
-![zw](https://ishare20.net/files/images/zw.jpg)
 

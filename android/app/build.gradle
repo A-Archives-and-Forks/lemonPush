@@ -7,13 +7,21 @@ android {
         applicationId "net.lemontree.push"
         minSdkVersion 21
         targetSdkVersion 32
-        versionCode 5
-        versionName "1.0.4"
+        versionCode 6
+        versionName "1.0.5.3"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
         }
     }
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            // 拼装新文件名：lemon_push_v<versionName>.apk
+            def newName = "lemon_push_v${defaultConfig.versionName}.apk"
+            outputFileName = newName
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false

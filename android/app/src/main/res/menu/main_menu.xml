@@ -29,6 +29,6 @@
     <item
         android:id="@+id/sib_tools"
         android:orderInCategory="80"
-        android:title="小而美的工具们"
+        android:title="更多开发者作品"
         app:showAsAction="never" />
 </menu>

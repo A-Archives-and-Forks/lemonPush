@@ -11,7 +11,7 @@ const config = {
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
-  url: 'https://ishare20.net',
+  url: 'https://lemontree.one',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/sibtools/lemon_push/',
@@ -82,7 +82,7 @@ const config = {
           { to: 'docs/download', label: '下载', position: 'left' },
           { to: 'https://github.com/ishare20/lemonPush', label: 'Github', position: 'left' },
           {
-            href: 'hhttps://ishare20.net/sibtools/',
+            href: 'hhttps://lemontree.one/sibtools/',
             label: '小而美tools',
             position: 'right',
           },
@@ -123,11 +123,11 @@ const config = {
             items: [
               {
                 label: '小而美的工具们',
-                href: 'https://ishare20.net/sibtools/',
+                href: 'https://lemontree.one/sibtools/',
               },
               {
                 label: '微信订阅号',
-                href: 'https://ishare20.net/files/images/wxdy.png',
+                href: 'https://lemontree.one/files/images/wxdy.png',
               },
             ],
           },

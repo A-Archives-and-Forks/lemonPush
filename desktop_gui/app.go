@@ -105,6 +105,7 @@ func (a *App) InitListener(config Config) Json {
 	http.HandleFunc("/get_clipboard", getClipboard)
 	http.HandleFunc("/download", download)
 	http.HandleFunc("/upload", upload)
+	http.HandleFunc("/ping", ping)
 	if config.Folder != "" {
 		createFolderIfNotExists(config.Folder)
 	}
@@ -351,6 +352,22 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	resp["code"] = "0"
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {
+		return
+	}
+	w.Write(jsonResp)
+}
+
+func ping(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("客户端 " + r.RemoteAddr + " 在线检测")
+	w.Header().Set("Content-Type", "application/json")
+	resp := make(map[string]interface{})
+	resp["code"] = 0
+	resp["msg"] = "pong"
+	resp["timestamp"] = time.Now().Unix()
+	resp["service"] = "lemon_push"
+	jsonResp, err := json.Marshal(resp)
+	if err != nil {
+		http.Error(w, "JSON编码错误", http.StatusInternalServerError)
 		return
 	}
 	w.Write(jsonResp)
