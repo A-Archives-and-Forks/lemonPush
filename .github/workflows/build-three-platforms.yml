@@ -133,7 +133,7 @@ jobs:
       run: cd desktop_gui/frontend && yarn build
       
     - name: Build macOS application
-      run: cd desktop_gui && wails build -platform darwin/universal -clean
+      run: cd desktop_gui && wails build -platform darwin/universal -clean -ldflags="-s -w -extldflags='-Wl,-ObjC'"
       
     - name: Prepare artifacts
       run: |
