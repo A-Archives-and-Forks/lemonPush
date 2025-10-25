@@ -22,16 +22,13 @@ jobs:
         include:
           - os: windows-latest
             platform: windows/amd64
-            artifact_name: lemon_push_gui_v${{ env.VERSION }}_windows_amd64.exe
-            zip_name: lemon_push_gui_v${{ env.VERSION }}_windows_amd64.zip
+            artifact_suffix: windows_amd64
           - os: macos-latest
             platform: darwin/arm64
-            artifact_name: lemon_push_gui_v${{ env.VERSION }}_darwin_arm64
-            zip_name: lemon_push_gui_v${{ env.VERSION }}_darwin_arm64.zip
+            artifact_suffix: darwin_arm64
           - os: ubuntu-latest
             platform: linux/amd64
-            artifact_name: lemon_push_gui_v${{ env.VERSION }}_linux_amd64
-            zip_name: lemon_push_gui_v${{ env.VERSION }}_linux_amd64.zip
+            artifact_suffix: linux_amd64
 
     runs-on: ${{ matrix.os }}
     
@@ -108,9 +105,9 @@ jobs:
       run: |
         cd release
         if [[ "$RUNNER_OS" == "Windows" ]]; then
-          powershell -command "Compress-Archive -Path '*' -DestinationPath '${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_${{ matrix.platform }}.zip' -Force"
+          powershell -command "Compress-Archive -Path '*' -DestinationPath '${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_${{ matrix.artifact_suffix }}.zip' -Force"
         else
-          zip -r "${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_${{ matrix.platform }}.zip" *
+          zip -r "${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_${{ matrix.artifact_suffix }}.zip" *
         fi
       shell: bash
       
@@ -118,7 +115,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.platform }}
-        path: release/${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_${{ matrix.platform }}.zip
+        path: release/${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_${{ matrix.artifact_suffix }}.zip
 
   release:
     needs: build
@@ -166,9 +163,9 @@ jobs:
           1. 下载并解压 lemon_push_gui_v${{ env.VERSION }}_linux_amd64.zip
           2. 运行 lemon_push_gui_v${{ env.VERSION }}_linux_amd64
         files: |
-          artifacts/windows/amd64/lemon_push_gui_v${{ env.VERSION }}_windows_amd64.zip
-          artifacts/darwin/arm64/lemon_push_gui_v${{ env.VERSION }}_darwin_arm64.zip
-          artifacts/linux/amd64/lemon_push_gui_v${{ env.VERSION }}_linux_amd64.zip
+            artifacts/windows/amd64/lemon_push_gui_v${{ env.VERSION }}_windows_amd64.zip
+            artifacts/darwin/arm64/lemon_push_gui_v${{ env.VERSION }}_darwin_arm64.zip
+            artifacts/linux/amd64/lemon_push_gui_v${{ env.VERSION }}_linux_amd64.zip
         draft: false
         prerelease: false
       env:
