@@ -16,78 +16,83 @@
       </div>
     </n-card>
 
-    <!-- 主要操作区域 -->
-    <n-card class="main-actions" title="快速操作">
-      <div class="action-buttons">
-        <n-button type="primary" size="large" @click="genQRCode" class="action-btn">
-          <template #icon>
-            <n-icon><qr-code-outline /></n-icon>
-          </template>
-          生成二维码
-        </n-button>
-        
-        <n-popover trigger="click" placement="bottom">
-          <template #trigger>
-            <n-button size="large" class="action-btn">
+    <!-- 操作与设置面板 -->
+    <n-card class="actions-settings-panel" title="操作与设置">
+      <div class="actions-settings-grid">
+        <!-- 快速操作区 -->
+        <div class="quick-actions-section">
+          <div class="action-buttons">
+            <n-button type="primary" size="small" @click="genQRCode" class="action-btn">
               <template #icon>
-                <n-icon><wifi-outline /></n-icon>
+                <n-icon><qr-code-outline /></n-icon>
               </template>
-              查看IP地址
+              生成二维码
             </n-button>
-          </template>
-          <div class="ip-list">
-            <div v-for="option in options" :key="option.value" class="ip-item">
-              <n-button text @click="copyText(option.value)" class="ip-copy-btn">
-                {{ option.value }}
-                <template #icon>
-                  <n-icon><copy-outline /></n-icon>
-                </template>
-              </n-button>
-            </div>
-          </div>
-        </n-popover>
-
-        <n-button type="info" size="large" @click="showPort" class="action-btn">
-          <template #icon>
-            <n-icon><settings-outline /></n-icon>
-          </template>
-          修改端口
-        </n-button>
-
-        <n-button @click="hideApp" size="large" class="action-btn" v-if="!isDarwin">
-          <template #icon>
-            <n-icon><arrow-down-outline /></n-icon>
-          </template>
-          隐藏窗口
-        </n-button>
-      </div>
-    </n-card>
-
-    <!-- 设置面板 -->
-    <n-card class="settings-panel" title="设置选项">
-      <div class="settings-grid">
-        <div class="setting-item">
-          <div class="setting-info">
-            <div class="setting-title">
-              自动打开链接
-              <n-popover trigger="hover" placement="top" :show-arrow="false">
-                <template #trigger>
-                  <n-icon class="help-icon" size="16">
-                    <help-circle-outline />
-                  </n-icon>
-                </template>
-                <div class="help-tooltip">
-                  开启后，当接收到包含网页链接的文本时，会自动使用默认浏览器打开链接
+            
+            <n-popover trigger="click" placement="bottom">
+              <template #trigger>
+                <n-button type="info" size="small" class="action-btn">
+                  <template #icon>
+                    <n-icon><wifi-outline /></n-icon>
+                  </template>
+                  查看本机IP
+                </n-button>
+              </template>
+              <div class="ip-list">
+                <div v-for="option in options" :key="option.value" class="ip-item">
+                  <n-button text @click="copyText(option.value)" class="ip-copy-btn">
+                    {{ option.value }}
+                    <template #icon>
+                      <n-icon><copy-outline /></n-icon>
+                    </template>
+                  </n-button>
                 </div>
-              </n-popover>
-            </div>
+              </div>
+            </n-popover>
+
+            <n-button type="warning" size="small" @click="showPort" class="action-btn">
+              <template #icon>
+                <n-icon><settings-outline /></n-icon>
+              </template>
+              修改端口
+            </n-button>
+
+            <n-button @click="hideApp" size="small" class="action-btn" v-if="!isDarwin">
+              <template #icon>
+                <n-icon><arrow-down-outline /></n-icon>
+              </template>
+              隐藏窗口
+            </n-button>
           </div>
-          <n-switch v-model:value="config.auto_open_url" @update:value="saveConfig(1)" />
         </div>
         
-
+        <!-- 设置选项区 -->
+        <div class="settings-section">
+          <div class="settings-list">
+            <div class="setting-item-mini">
+              <div class="setting-info">
+                <div class="setting-title">
+                  自动打开链接
+                  <n-popover trigger="hover" placement="top" :show-arrow="false">
+                    <template #trigger>
+                      <n-icon class="help-icon" size="14">
+                        <help-circle-outline />
+                      </n-icon>
+                    </template>
+                    <div class="help-tooltip">
+                      开启后，当接收到包含网页链接的文本时，会自动使用默认浏览器打开链接
+                    </div>
+                  </n-popover>
+                </div>
+              </div>
+              <n-switch v-model:value="config.auto_open_url" @update:value="saveConfig(1)" size="small" />
+            </div>
+          </div>
+        </div>
       </div>
     </n-card>
+
+
 
     <!-- 日志面板 -->
     <n-card class="logs-panel" title="接收日志">
@@ -400,7 +405,7 @@ onUnmounted(() => {
 
 <style scoped>
 .home-container {
-  padding: 16px;
+  padding: 12px;
   max-width: 1200px;
   margin: 0 auto;
   min-height: 100vh;
@@ -409,9 +414,9 @@ onUnmounted(() => {
 
 /* 状态卡片样式 */
 .status-card {
-  margin-bottom: 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   background: white;
   border: none;
 }
@@ -420,7 +425,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .status-indicator {
@@ -439,43 +444,52 @@ onUnmounted(() => {
 
 .status-dot.active {
   background: #2ed573;
-  box-shadow: 0 0 8px rgba(46, 213, 115, 0.4);
 }
 
 .status-text {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #2c3e50;
 }
 
 .status-description {
   color: #7f8c8d;
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 1.3;
 }
 
 /* 主要操作区域 */
 .main-actions {
-  margin-bottom: 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   background: white;
   border: none;
 }
 
 .action-buttons {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-  padding: 4px 0;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  padding: 0;
 }
 
 .action-btn {
-  border-radius: 6px;
+  transition: all 0.3s ease;
+  margin: 0 12px;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* 按钮基础样式 - 使用框架主题色 */
+.action-btn {
+  border-radius: 4px;
   font-weight: 500;
   transition: all 0.3s ease;
-  height: 36px;
-  font-size: 14px;
+  height: 28px;
+  font-size: 12px;
 }
 
 .action-btn:hover {
@@ -483,44 +497,67 @@ onUnmounted(() => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* 设置面板 */
-.settings-panel {
-  margin-bottom: 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+/* 操作与设置合并面板 */
+.actions-settings-panel {
+  margin-bottom: 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   background: white;
   border: none;
 }
 
-.settings-grid {
+.actions-settings-grid {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
-.setting-item {
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7f8c8d;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.quick-actions-section {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.settings-section {
+  padding-top: 4px;
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.setting-item-mini {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
+  padding: 8px 10px;
   background: #f8f9fa;
-  border-radius: 6px;
+  border-radius: 5px;
   transition: all 0.3s ease;
 }
 
-.setting-item:hover {
+.setting-item-mini:hover {
   background: #e9ecef;
 }
 
-.setting-info {
+.setting-info-mini {
   flex: 1;
 }
 
-.setting-title {
-  font-size: 14px;
+.setting-title-mini {
+  font-size: 12px;
   font-weight: 500;
   color: #2c3e50;
-  margin-bottom: 2px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -550,14 +587,15 @@ onUnmounted(() => {
 
 /* 日志面板 */
 .logs-panel {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   background: white;
   border: none;
 }
 
 .clear-btn {
   color: #e74c3c;
+  transition: all 0.3s ease;
 }
 
 .clear-btn:hover {
@@ -565,7 +603,7 @@ onUnmounted(() => {
 }
 
 .logs-container {
-  max-height: 300px;
+  max-height: 400px;
   overflow-y: auto;
 }
 
@@ -573,7 +611,7 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 12px;
+  padding: 10px;
   border-bottom: 1px solid #ecf0f1;
   transition: all 0.3s ease;
 }
@@ -590,7 +628,7 @@ onUnmounted(() => {
   font-size: 11px;
   color: #95a5a6;
   white-space: nowrap;
-  min-width: 50px;
+  min-width: 45px;
 }
 
 .log-content {
@@ -614,12 +652,12 @@ onUnmounted(() => {
 
 .empty-logs {
   text-align: center;
-  padding: 40px 16px;
+  padding: 30px 16px;
   color: #95a5a6;
 }
 
 .empty-icon {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   opacity: 0.5;
 }
 
@@ -738,45 +776,54 @@ onUnmounted(() => {
 
 /* 卡片标题优化 - 更紧凑 */
 .n-card-header {
-  padding: 12px 16px !important;
+  padding: 8px 12px !important;
   border-bottom: 1px solid #f0f0f0;
 }
 
 .n-card-header__main {
-  font-size: 16px !important;
+  font-size: 14px !important;
   font-weight: 600 !important;
 }
 
 .n-card__content {
-  padding: 16px !important;
+  padding: 12px !important;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .home-container {
-    padding: 12px;
+    padding: 8px;
   }
   
   .action-buttons {
-    grid-template-columns: 1fr;
-    gap: 8px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
   
-  .settings-grid {
-    gap: 8px;
+  .settings-list {
+    gap: 10px;
   }
   
-  .setting-item {
+  .setting-item-mini {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
-    padding: 10px;
+    gap: 6px;
+    padding: 8px;
   }
   
   .log-item {
     flex-direction: column;
-    gap: 6px;
-    padding: 10px;
+    gap: 4px;
+    padding: 8px;
+  }
+  
+  .status-card,
+  .actions-settings-panel {
+    margin-bottom: 8px;
+  }
+  
+  .section-title {
+    font-size: 12px;
   }
 }
 

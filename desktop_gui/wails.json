@@ -9,5 +9,11 @@
   "author": {
     "name": "lemonTree",
     "email": "745926289@qq.com"
+  },
+  "info": {
+    "productName": "柠檬Push",
+    "productVersion": "1.0.5.3",
+    "companyName": "lemonTree",
+    "copyright": "Copyright © 2025 lemonTree"
   }
 }

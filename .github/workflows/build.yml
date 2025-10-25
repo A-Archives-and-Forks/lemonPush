@@ -1,0 +1,175 @@
+name: Multi-Platform Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build (e.g., 1.0.5.3)'
+        required: true
+        default: '1.0.5.3'
+
+env:
+  APP_NAME: 柠檬Push
+  ENGLISH_NAME: lemon_push_gui
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows/amd64
+            artifact_name: lemon_push_gui_v${{ env.VERSION }}_windows_amd64.exe
+            zip_name: lemon_push_gui_v${{ env.VERSION }}_windows_amd64.zip
+          - os: macos-latest
+            platform: darwin/arm64
+            artifact_name: lemon_push_gui_v${{ env.VERSION }}_darwin_arm64
+            zip_name: lemon_push_gui_v${{ env.VERSION }}_darwin_arm64.zip
+          - os: ubuntu-latest
+            platform: linux/amd64
+            artifact_name: lemon_push_gui_v${{ env.VERSION }}_linux_amd64
+            zip_name: lemon_push_gui_v${{ env.VERSION }}_linux_amd64.zip
+
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'yarn'
+        
+    - name: Setup Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: '1.19'
+        
+    - name: Install Wails
+      run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
+      
+    - name: Set version from tag or input
+      run: |
+        if [[ "${{ github.ref_type }}" == "tag" ]]; then
+          VERSION=${GITHUB_REF#refs/tags/v}
+        else
+          VERSION="${{ github.event.inputs.version }}"
+        fi
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "Building version: $VERSION"
+      shell: bash
+      
+    - name: Update version in wails.json
+      run: |
+        # Update version in wails.json
+        if [[ "$RUNNER_OS" == "macOS" ]]; then
+          sed -i '' 's/"productVersion": "[^"]*"/"productVersion": "'$VERSION'"/' wails.json
+        else
+          sed -i 's/"productVersion": "[^"]*"/"productVersion": "'$VERSION'"/' wails.json
+        fi
+        echo "Updated version in wails.json to $VERSION"
+      shell: bash
+      
+    - name: Install frontend dependencies
+      run: yarn install
+      
+    - name: Build application
+      run: wails build -platform ${{ matrix.platform }} -clean
+      
+    - name: Prepare artifacts (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        mkdir -p release
+        copy "build\bin\${{ env.APP_NAME }}.exe" "release\${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_windows_amd64.exe"
+        # Copy any DLL files if they exist
+        if exist "build\bin\*.dll" copy "build\bin\*.dll" "release\"
+      shell: powershell
+      
+    - name: Prepare artifacts (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        mkdir -p release
+        cp "build/bin/${{ env.APP_NAME }}" "release/${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_darwin_arm64"
+      shell: bash
+      
+    - name: Prepare artifacts (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        mkdir -p release
+        cp "build/bin/${{ env.APP_NAME }}" "release/${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_linux_amd64"
+      shell: bash
+      
+    - name: Create ZIP archive
+      run: |
+        cd release
+        if [[ "$RUNNER_OS" == "Windows" ]]; then
+          powershell -command "Compress-Archive -Path '*' -DestinationPath '${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_${{ matrix.platform }}.zip' -Force"
+        else
+          zip -r "${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_${{ matrix.platform }}.zip" *
+        fi
+      shell: bash
+      
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.platform }}
+        path: release/${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_${{ matrix.platform }}.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set version from tag
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+        echo "Releasing version: $VERSION"
+      shell: bash
+      
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: artifacts
+        
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: ${{ env.APP_NAME }} v${{ env.VERSION }}
+        body: |
+          ## ${{ env.APP_NAME }} v${{ env.VERSION }}
+          
+          ### 下载链接:
+          - Windows (amd64): lemon_push_gui_v${{ env.VERSION }}_windows_amd64.zip
+          - macOS (arm64): lemon_push_gui_v${{ env.VERSION }}_darwin_arm64.zip
+          - Linux (amd64): lemon_push_gui_v${{ env.VERSION }}_linux_amd64.zip
+          
+          ### 安装说明:
+          #### Windows:
+          1. 下载并解压 lemon_push_gui_v${{ env.VERSION }}_windows_amd64.zip
+          2. 运行 lemon_push_gui_v${{ env.VERSION }}_windows_amd64.exe
+          
+          #### macOS:
+          1. 下载并解压 lemon_push_gui_v${{ env.VERSION }}_darwin_arm64.zip
+          2. 将 lemon_push_gui_v${{ env.VERSION }}_darwin_arm64 移动到应用程序文件夹
+          
+          #### Linux:
+          1. 下载并解压 lemon_push_gui_v${{ env.VERSION }}_linux_amd64.zip
+          2. 运行 lemon_push_gui_v${{ env.VERSION }}_linux_amd64
+        files: |
+          artifacts/windows/amd64/lemon_push_gui_v${{ env.VERSION }}_windows_amd64.zip
+          artifacts/darwin/arm64/lemon_push_gui_v${{ env.VERSION }}_darwin_arm64.zip
+          artifacts/linux/amd64/lemon_push_gui_v${{ env.VERSION }}_linux_amd64.zip
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
