@@ -122,29 +122,17 @@ with open('app/build.gradle.backup', 'r') as f:
     content = f.read()
 
 # Add signing configuration before buildTypes
-signing_config = """    // Signing configuration added by GitHub Actions
-    if (project.hasProperty('RELEASE_STORE_FILE')) {
-        signingConfigs {
-            release {
-                storeFile file(RELEASE_STORE_FILE)
-                storePassword RELEASE_STORE_PASSWORD
-                keyAlias RELEASE_KEY_ALIAS
-                keyPassword RELEASE_KEY_PASSWORD
-            }
-        }
-    }
-
-"""
+signing_config = "    // Signing configuration added by GitHub Actions\n    if (project.hasProperty('RELEASE_STORE_FILE')) {\n        signingConfigs {\n            release {\n                storeFile file(RELEASE_STORE_FILE)\n                storePassword RELEASE_STORE_PASSWORD\n                keyAlias RELEASE_KEY_ALIAS\n                keyPassword RELEASE_KEY_PASSWORD\n            }\n        }\n    }\n\n"
 
 # Insert signing config before buildTypes
-content = content.replace('    buildTypes {', signing_config + '    buildTypes {')
+if '    buildTypes {' in content:
+    content = content.replace('    buildTypes {', signing_config + '    buildTypes {')
+else:
+    print("Error: Could not find buildTypes section in build.gradle")
+    exit(1)
 
 # Update release build type to use signing config
-old_release = """        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }"""
-
+old_release_pattern = r"(\s+release\s+\{[\s\S]*?minifyEnabled\s+\w+\s*[\s\S]*?proguardFiles\s+.*?[\s\S]*?\})"
 new_release = """        release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -153,7 +141,19 @@ new_release = """        release {
             }
         }"""
 
-content = content.replace(old_release, new_release)
+# Try to replace the release build type
+if re.search(old_release_pattern, content):
+    content = re.sub(old_release_pattern, new_release, content)
+else:
+    print("Warning: Could not find release build type to update")
+    # Try to find and update just the signing config part
+    if 'release {' in content and 'signingConfig' not in content:
+        # Add signing config to existing release block
+        content = re.sub(
+            r'(\s+release\s+\{[\s\S]*?proguardFiles\s+.*?[\s\S]*?\})',
+            r'\1\n            if (project.hasProperty(\'RELEASE_STORE_FILE\')) {\n                signingConfig signingConfigs.release\n            }',
+            content
+        )
 
 # Write updated content
 with open('app/build.gradle', 'w') as f:
@@ -165,6 +165,15 @@ EOF
         # Run the script
         python3 add_signing.py
         
+        # Verify the changes were applied
+        if grep -q "signingConfigs" app/build.gradle; then
+            echo "Signing configuration added successfully"
+        else
+            echo "Warning: Signing configuration may not have been added correctly"
+            echo "Checking build.gradle for buildTypes section:"
+            grep -A 10 "buildTypes" app/build.gradle || echo "buildTypes section not found"
+        fi
+        
         # Clean up
         rm add_signing.py
       shell: bash
@@ -173,6 +182,21 @@ EOF
       run: |
         cd android
         ./gradlew assembleDebug
+        
+        # Check if debug APK was created
+        echo "Checking for debug APK..."
+        ls -la app/build/outputs/apk/debug/
+        
+        # Verify the debug APK exists
+        DEBUG_APK="app/build/outputs/apk/debug/app-debug.apk"
+        if [ -f "$DEBUG_APK" ]; then
+          echo "Debug APK created successfully: $DEBUG_APK"
+        else
+          echo "Error: Debug APK not found at $DEBUG_APK"
+          echo "Contents of debug directory:"
+          ls -la app/build/outputs/apk/debug/
+          exit 1
+        fi
       shell: bash
       
     - name: Build Release APK
@@ -196,14 +220,23 @@ EOF
           ./gradlew assembleRelease
         fi
         
-        # Verify the APK was created with the expected name
+        # Check if APK was created
+        echo "Checking for release APK..."
+        ls -la app/build/outputs/apk/release/
+        
+        # Try to find the APK with expected name or fallback to default
         VERSION="${{ steps.version.outputs.version }}"
         EXPECTED_APK="app/build/outputs/apk/release/lemon_push_v${VERSION}.apk"
+        FALLBACK_APK="app/build/outputs/apk/release/app-release.apk"
+        
         if [ -f "$EXPECTED_APK" ]; then
-          echo "Release APK created successfully: $EXPECTED_APK"
+          echo "Found release APK with expected name: $EXPECTED_APK"
+        elif [ -f "$FALLBACK_APK" ]; then
+          echo "Found release APK with default name, renaming to expected name..."
+          cp "$FALLBACK_APK" "$EXPECTED_APK"
         else
-          echo "Error: Expected release APK not found at $EXPECTED_APK"
-          echo "Listing release directory contents:"
+          echo "Error: No release APK found!"
+          echo "Contents of release directory:"
           ls -la app/build/outputs/apk/release/
           exit 1
         fi
@@ -216,6 +249,19 @@ EOF
         cp android/app/build/outputs/apk/debug/app-debug.apk "release/${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_debug.apk"
         # Copy release APK (release builds are renamed by applicationVariants.all)
         cp android/app/build/outputs/apk/release/lemon_push_v${{ steps.version.outputs.version }}.apk "release/${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_release.apk"
+        
+        # Verify APKs exist
+        if [ ! -f "release/${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_debug.apk" ]; then
+          echo "Error: Debug APK not found!"
+          ls -la android/app/build/outputs/apk/debug/
+          exit 1
+        fi
+        
+        if [ ! -f "release/${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_release.apk" ]; then
+          echo "Error: Release APK not found!"
+          ls -la android/app/build/outputs/apk/release/
+          exit 1
+        fi
         
         # Create checksums
         cd release
@@ -245,6 +291,23 @@ EOF
         name: android-checksums
         path: release/checksums.txt
         retention-days: 90
+        
+    - name: Clean up temporary files
+      if: always()
+      run: |
+        cd android
+        # Clean up keystore if it exists
+        if [ -f "app/keystore.jks" ]; then
+          echo "Removing temporary keystore file"
+          rm app/keystore.jks
+        fi
+        
+        # Restore original build.gradle if backup exists
+        if [ -f "app/build.gradle.backup" ]; then
+          echo "Restoring original build.gradle"
+          mv app/build.gradle.backup app/build.gradle
+        fi
+      shell: bash
 
   create-release:
     needs: build-android
