@@ -51,6 +51,7 @@ const dictionary: Map<number, string> = new Map([
     [0, '小程序'],
     [1, '浏览器插件'],
     [2, '网页'],
+    [3, 'PC软件'],
 ]);
 const bodyStyle = {
     width: '600px'
@@ -62,7 +63,13 @@ const productList = [
         name: '便捷搜索',
         desc: '无需重输关键词一键切换搜索引擎',
         type: 1,
-        link: 'https://github.com/lemon-codehub/SearchCrutch'
+        link: 'https://lemontree.one/docs/quicksearch/'
+    },
+    {
+        name: '翻译命名',
+        desc: '快速获取多种命名格式的翻译工具',
+        type: 3,
+        link: 'https://lemontree.one/tools/naming-tool.html'
     },
     {
         name: '今日愿景板',
