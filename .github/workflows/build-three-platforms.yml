@@ -177,8 +177,12 @@ jobs:
     - name: Install Wails
       run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
       
-    - name: Install libgtk-3-dev (for Linux UI)
-      run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+    - name: Install Linux system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+        sudo apt-get install -y libayatana-appindicator3-dev
+        sudo apt-get install -y libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
       
     - name: Set version from tag or input
       run: |
