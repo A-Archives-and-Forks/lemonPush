@@ -178,21 +178,21 @@ jobs:
       shell: bash
       
     - name: Upload Debug APK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: android-debug-apk
         path: release/${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_debug.apk
         retention-days: 30
         
     - name: Upload Release APK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: android-release-apk
         path: release/${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_release.apk
         retention-days: 90
         
     - name: Upload Checksums
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: android-checksums
         path: release/checksums.txt
@@ -220,13 +220,13 @@ jobs:
       shell: bash
       
     - name: Download Release APK
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: android-release-apk
         path: artifacts
         
     - name: Download Checksums
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: android-checksums
         path: artifacts
@@ -263,19 +263,9 @@ jobs:
           请查看项目提交记录了解详细更新内容。
         files: |
           artifacts/${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_release.apk
+          artifacts/${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_debug.apk
           artifacts/checksums.txt
         draft: false
         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: Upload Debug APK to Release
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_debug.apk
-        asset_name: lemon_push_v${{ steps.version.outputs.version }}_debug.apk
-        asset_content_type: application/vnd.android.package-archive

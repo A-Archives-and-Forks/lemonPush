@@ -37,16 +37,16 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'yarn'
         
     - name: Setup Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v4
       with:
         go-version: '1.19'
         
@@ -115,7 +115,7 @@ jobs:
       shell: bash
       
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.platform }}
         path: release/${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_${{ matrix.platform }}.zip
@@ -127,7 +127,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Set version from tag
       run: |
@@ -137,7 +137,7 @@ jobs:
       shell: bash
       
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         path: artifacts
         

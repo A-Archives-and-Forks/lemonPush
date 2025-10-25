@@ -21,16 +21,16 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'yarn'
         
     - name: Setup Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v4
       with:
         go-version: '1.19'
         
@@ -76,7 +76,7 @@ jobs:
       shell: powershell
       
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: windows-amd64
         path: release/${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_windows_amd64.zip
@@ -86,16 +86,16 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'yarn'
         
     - name: Setup Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v4
       with:
         go-version: '1.19'
         
@@ -138,7 +138,7 @@ jobs:
       shell: bash
       
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: darwin-arm64
         path: release/${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_darwin_arm64.zip
@@ -148,16 +148,16 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'yarn'
         
     - name: Setup Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v4
       with:
         go-version: '1.19'
         
@@ -203,7 +203,7 @@ jobs:
       shell: bash
       
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: linux-amd64
         path: release/${{ env.ENGLISH_NAME }}_v${{ env.VERSION }}_linux_amd64.zip
@@ -222,7 +222,7 @@ jobs:
       shell: bash
       
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         path: artifacts
         
