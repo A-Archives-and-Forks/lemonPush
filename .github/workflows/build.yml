@@ -41,7 +41,7 @@ jobs:
       with:
         node-version: '18'
         cache: 'yarn'
-        cache-dependency-path: 'desktop_gui/yarn.lock'
+        cache-dependency-path: 'desktop_gui/frontend/yarn.lock'
         
     - name: Setup Go
       uses: actions/setup-go@v4
@@ -75,7 +75,7 @@ jobs:
       shell: bash
       
     - name: Install frontend dependencies
-      run: cd desktop_gui && yarn install
+      run: cd desktop_gui/frontend && yarn install
       
     - name: Build frontend
       run: cd desktop_gui/frontend && yarn build
