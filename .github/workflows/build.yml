@@ -77,6 +77,9 @@ jobs:
     - name: Install frontend dependencies
       run: cd desktop_gui && yarn install
       
+    - name: Build frontend
+      run: cd desktop_gui/frontend && yarn build
+      
     - name: Build application
       run: cd desktop_gui && wails build -platform ${{ matrix.platform }} -clean
       
