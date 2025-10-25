@@ -88,10 +88,12 @@ jobs:
         
         # Extract version components (assuming format like 1.0.5.3)
         IFS='.' read -ra VERSION_PARTS <<< "$VERSION"
-        MAJOR=${VERSION_PARTS[0]}
-        MINOR=${VERSION_PARTS[1]}
-        PATCH=${VERSION_PARTS[2]}
-        BUILD=${VERSION_PARTS[3]}
+        
+        # Set default values if parts are missing
+        MAJOR=${VERSION_PARTS[0]:-1}
+        MINOR=${VERSION_PARTS[1]:-0}
+        PATCH=${VERSION_PARTS[2]:-0}
+        BUILD=${VERSION_PARTS[3]:-0}
         
         # Calculate versionCode (e.g., 10503 for 1.0.5.3)
         VERSION_CODE=$((MAJOR * 1000000 + MINOR * 10000 + PATCH * 100 + BUILD))
@@ -108,29 +110,63 @@ jobs:
       run: |
         cd android
         
-        # Create signing configuration in app/build.gradle
-        cat >> app/build.gradle << 'EOF'
+        # Backup original build.gradle
+        cp app/build.gradle app/build.gradle.backup
+        
+        # Create signing configuration script
+        cat > add_signing.py << 'EOF'
+import re
 
-        // Signing configuration added by GitHub Actions
-        if (project.hasProperty('RELEASE_STORE_FILE')) {
-            signingConfigs {
-                release {
-                    storeFile file(RELEASE_STORE_FILE)
-                    storePassword RELEASE_STORE_PASSWORD
-                    keyAlias RELEASE_KEY_ALIAS
-                    keyPassword RELEASE_KEY_PASSWORD
-                }
-            }
-            
-            buildTypes {
-                release {
-                    signingConfig signingConfigs.release
-                }
+# Read the original build.gradle
+with open('app/build.gradle.backup', 'r') as f:
+    content = f.read()
+
+# Add signing configuration before buildTypes
+signing_config = """    // Signing configuration added by GitHub Actions
+    if (project.hasProperty('RELEASE_STORE_FILE')) {
+        signingConfigs {
+            release {
+                storeFile file(RELEASE_STORE_FILE)
+                storePassword RELEASE_STORE_PASSWORD
+                keyAlias RELEASE_KEY_ALIAS
+                keyPassword RELEASE_KEY_PASSWORD
             }
         }
-        EOF
+    }
+
+"""
+
+# Insert signing config before buildTypes
+content = content.replace('    buildTypes {', signing_config + '    buildTypes {')
+
+# Update release build type to use signing config
+old_release = """        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }"""
+
+new_release = """        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (project.hasProperty('RELEASE_STORE_FILE')) {
+                signingConfig signingConfigs.release
+            }
+        }"""
+
+content = content.replace(old_release, new_release)
+
+# Write updated content
+with open('app/build.gradle', 'w') as f:
+    f.write(content)
+
+print('Added signing configuration to build.gradle')
+EOF
         
-        echo "Added signing configuration to build.gradle"
+        # Run the script
+        python3 add_signing.py
+        
+        # Clean up
+        rm add_signing.py
       shell: bash
       
     - name: Build Debug APK
@@ -159,15 +195,27 @@ jobs:
           echo "Building unsigned release APK..."
           ./gradlew assembleRelease
         fi
+        
+        # Verify the APK was created with the expected name
+        VERSION="${{ steps.version.outputs.version }}"
+        EXPECTED_APK="app/build/outputs/apk/release/lemon_push_v${VERSION}.apk"
+        if [ -f "$EXPECTED_APK" ]; then
+          echo "Release APK created successfully: $EXPECTED_APK"
+        else
+          echo "Error: Expected release APK not found at $EXPECTED_APK"
+          echo "Listing release directory contents:"
+          ls -la app/build/outputs/apk/release/
+          exit 1
+        fi
       shell: bash
       
     - name: Prepare APK artifacts
       run: |
         mkdir -p release
-        # Copy debug APK
+        # Copy debug APK (debug builds use the default name)
         cp android/app/build/outputs/apk/debug/app-debug.apk "release/${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_debug.apk"
-        # Copy release APK
-        cp android/app/build/outputs/apk/release/app-release.apk "release/${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_release.apk"
+        # Copy release APK (release builds are renamed by applicationVariants.all)
+        cp android/app/build/outputs/apk/release/lemon_push_v${{ steps.version.outputs.version }}.apk "release/${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_release.apk"
         
         # Create checksums
         cd release
@@ -204,6 +252,9 @@ jobs:
     if: (startsWith(github.ref, 'refs/tags/') || github.event.inputs.release == 'true') && github.event_name != 'pull_request'
     
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
     - name: Set version from tag or input
       id: version
       run: |
@@ -225,6 +276,12 @@ jobs:
         name: android-release-apk
         path: artifacts
         
+    - name: Download Debug APK
+      uses: actions/download-artifact@v4
+      with:
+        name: android-debug-apk
+        path: artifacts
+        
     - name: Download Checksums
       uses: actions/download-artifact@v4
       with:
@@ -239,13 +296,13 @@ jobs:
           ## ${{ env.APP_NAME }} Android v${{ steps.version.outputs.version }}
           
           ### 下载链接:
-          - Android Release APK: lemon_push_v${{ steps.version.outputs.version }}_release.apk
-          - Android Debug APK: lemon_push_v${{ steps.version.outputs.version }}_debug.apk
+          - Android Release APK: ${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_release.apk
+          - Android Debug APK: ${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_debug.apk
           - 校验和文件: checksums.txt
           
           ### 安装说明:
           #### Android:
-          1. 下载 lemon_push_v${{ steps.version.outputs.version }}_release.apk
+          1. 下载 ${{ env.ENGLISH_NAME }}_v${{ steps.version.outputs.version }}_release.apk
           2. 在 Android 设备上启用"未知来源"安装
           3. 点击 APK 文件进行安装
           
