@@ -21,6 +21,9 @@ import (
 	xClipboard "golang.design/x/clipboard"
 )
 
+// 声明版本变量，用于构建过程中通过ldflags设置
+var version string
+
 var dt = time.Now()
 var folder = "./_lemon_"
 var auto_open_url = "open"

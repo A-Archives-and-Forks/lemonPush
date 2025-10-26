@@ -34,8 +34,9 @@ const config = {
   //网站访问统计代码，用于统计网站访问量，自己部署可去掉
   scripts: [
     {
-      src: "https://sdk.51.la/js-sdk-pro.min.js?id=K9LPlcjqF4puqNw3&ck=K9LPlcjqF4puqNw3",
-      async: true
+      src: "https://umami.litetool.net/script.js",
+      async: true,
+      'data-website-id': 'b26893a1-2dc2-4bcd-9fe3-689c2c22c658',
     }
   ],
 
@@ -82,8 +83,8 @@ const config = {
           { to: 'docs/download', label: '下载', position: 'left' },
           { to: 'https://github.com/ishare20/lemonPush', label: 'Github', position: 'left' },
           {
-            href: 'hhttps://lemontree.one/sibtools/',
-            label: '小而美tools',
+            href: 'https://lemontree.one/products.html',
+            label: '更多作品',
             position: 'right',
           },
         ],
@@ -98,20 +99,12 @@ const config = {
                 label: '教程',
                 to: '/docs/intro',
               },
-              {
-                label: '路线图',
-                href: 'https://support.qq.com/products/405982/roadmap',
-              },
 
             ],
           },
           {
             title: '反馈',
             items: [
-              {
-                label: '兔小槽',
-                href: 'https://support.qq.com/products/405982'
-              },
               {
                 label: 'Telegram',
                 href: 'https://t.me/+ZVIwHSBOg1o5NzFl',
@@ -122,12 +115,8 @@ const config = {
             title: '更多',
             items: [
               {
-                label: '小而美的工具们',
-                href: 'https://lemontree.one/sibtools/',
-              },
-              {
-                label: '微信订阅号',
-                href: 'https://lemontree.one/files/images/wxdy.png',
+                label: '更多作品',
+                href: 'https://lemontree.one/products.html',
               },
             ],
           },
