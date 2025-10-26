@@ -102,12 +102,3 @@ sidebar_position: 1
 请不要从第三方平台下载软件，本项目代码开源，第三方平台的软件下载使用可能会被加入恶意代码导致信息泄露
 
 
-电报群
-
-[Telegram](https://t.me/+ZVIwHSBOg1o5NzFl)
-
-微信订阅号
-
-![wx](https://img.lemontree.one/i/2025/10/25/gox6fu.jpg)
-
-

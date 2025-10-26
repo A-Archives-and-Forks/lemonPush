@@ -81,7 +81,7 @@ const config = {
             label: '教程',
           },
           { to: 'docs/download', label: '下载', position: 'left' },
-          { to: 'https://github.com/ishare20/lemonPush', label: 'Github', position: 'left' },
+          { to: 'https://github.com/lemon-codehub/lemonPush', label: 'Github', position: 'left' },
           {
             href: 'https://lemontree.one/products.html',
             label: '更多作品',
@@ -100,15 +100,6 @@ const config = {
                 to: '/docs/intro',
               },
 
-            ],
-          },
-          {
-            title: '反馈',
-            items: [
-              {
-                label: 'Telegram',
-                href: 'https://t.me/+ZVIwHSBOg1o5NzFl',
-              },
             ],
           },
           {
