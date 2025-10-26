@@ -1,80 +1,111 @@
-# LemonPush
+好的，这是您提供的中文内容的英文翻译：
+
+## LemonPush
+
+[Simplified Chinese](readme.md) | [English](readme-en.md)
+
 LemonPush is an efficient tool for pushing text from your mobile device to your computer's clipboard under the same WiFi environment. It supports Android and iOS on the mobile side, and Windows, Mac, and Linux platforms on the computer side.
 
-## Key Features
-- One-click push of mobile clipboard text to computer clipboard, with automatic recognition of URLs for opening in the default browser.
-- Supports push-on-open and receiving text shared from other apps.
-- No GUI, no installation required, small size, and multi-platform support for computers.
-- Allows multiple mobile devices to push to the computer, and the app supports multiple computers.
+## [Download Link (Including iOS Shortcuts)](https://lemontree.one/sibtools/lemon_push/docs/download)
 
-![lemonpush](https://lemontree.one/sibtools/lemon_push/img/lemonpush.jpg)
+## Setup Tutorial
 
-## [Download (Including iOS Shortcuts) ↗](https://lemontree.one/sibtools/lemon_push/docs/download)
+Double-click to launch the LemonPush application on your computer. On the Android side, install the LemonPush App; on the iOS side, use the Shortcuts. On the computer side, click LemonPush to generate a QR code. Simply scan the code with your Android phone to match and start using. For iOS, modify the IP in the Shortcut to your computer's IP address to use it.
 
-## Configuration Guide
-After double-clicking to start the program on your computer, it will display the computer's IP. Install the LemonPush App on your phone, click to set the IP displayed on the computer side. If multiple IPs are displayed, use the IP of your local network (usually starts with 192). After filling in the computer's IP, click Push Clipboard to get the clipboard and push it to the computer side.
+When generating the QR code, your computer might show multiple IP addresses. Use the IP address of your local area network (LAN), typically starting with 192. After scanning the code or manually entering the computer's IP, click "Push Clipboard" to capture and push the clipboard content to the computer.
 
-The first time the program runs, it will create a default configuration file named `lemon_push.conf`. If there are any port conflicts, you can edit the port number in the configuration file and restart the program.
+If a port conflict occurs, you can modify the port number and restart the program.
 
 ## API Documentation
-### Writing to Computer's Clipboard
+
+### Write to Computer Clipboard
+
 `/set_clipboard?text=content`
 
-Returns JSON
+Returns JSON:
+
 ```
 {
     "code":"0",
     "data":"ok"
 }
 ```
-### Getting the Computer's Clipboard
+
+### Get Computer Clipboard
+
 `/get_clipboard`
 
-Returns JSON
+Returns JSON:
+
 ```
 {
     "code":"0",
-    "data":"content of the computer's clipboard"
+    "data":"Computer clipboard content"
 }
 ```
-## Frequently Asked Questions
-- If the computer cannot receive the mobile clipboard, you need to configure the computer's firewall (tutorial to be supplemented).
-- If the Mac cannot run the program with a double-click, you need to configure file permissions using the command `chmod u+x program filename`.
-- If you do not need the console when running the program, you can run it in the background. On Windows, use `Start-Process -WindowStyle hidden -FilePath "program"`. On Mac, use `nohup program &`.
 
-## Project Background
-In daily life, the frequency of sending messages between mobile phones and computers is high, and using WeChat or QQ to send messages is slightly cumbersome.
+### File Upload
 
-For example, the traditional steps of forwarding a webpage from a mobile phone to a computer for viewing are:
+Files are saved in the `./_lemon_` directory.
 
-1. Copy or share the link.
-2. Choose to send via QQ or WeChat.
-3. Click the link directly in QQ, or copy the link to the browser in WeChat.
+`/upload`
 
-The pain points of the above steps can be improved by the multi-screen interconnection scheme pushed by mobile phone manufacturers, but there are limitations, such as only supporting some mobile phones or their own notebooks.
+Request Example:
 
-Using LemonPush can reduce the above steps. If you turn on Push-on-Open on LemonPush, copy the text, switch to LemonPush, and it will immediately push the text to the computer's clipboard. If the text contains a link, it will automatically use the default browser to open it.
+`curl --location --request POST 'http://localhost:14756/upload' \ --form 'file=@"/E:/Downloads/__UNI__F0B72F8_0809143049.apk"'`
 
-The core of improving efficiency is to reduce steps and choices. Sending text to the computer almost inevitably means copying it to the clipboard, and sending a link to the computer almost inevitably means opening it in a browser, so LemonPush is developed based on these settings.
+### File Download
 
-## Technologies Used
-The computer side turns the clipboard interface into an HTTP service. Information interaction is achieved based on the HTTP service of the local area network. The computer side program is implemented in Go language.
+`/download`
+
+Request Example:
+
+`curl --location --request GET 'http://localhost:14756/download?filename=__UNI__F0B72F8_0809143049.apk'`
+
+## FAQ
+
+  - The computer cannot receive the mobile clipboard: You need to configure the computer's firewall to allow the application to pass through.
+  - Mac system currently does not support the tray icon.
+  - Linux currently has no graphical interface version.
+
+## Development Background
+
+The frequency of sending messages between mobile phones and computers is high in daily life, and using WeChat or QQ to send messages is often a little cumbersome.
+
+For example:
+
+I. Traditional steps for viewing a webpage link from a mobile phone on a computer:
+
+1.  Copy or share the link.
+2.  Select QQ or WeChat to send.
+3.  On QQ, click the link directly to open; on WeChat, you still need to copy the link to the browser.
+
+II. Traditional steps for transferring a mobile verification code to a computer:
+
+1.  Copy the verification code on the mobile side.
+2.  Select QQ or WeChat to send.
+3.  Copy the verification code on the computer side.
+
+The pain points above have been improved by the multi-screen collaboration solutions launched by mobile phone manufacturers, but these are often limited, such as only supporting certain phones or their own brand laptops, etc.
+
+Using LemonPush can reduce the steps above. If you enable "Push on Launch" in LemonPush, when you copy text and switch to the LemonPush app, the text will be immediately pushed to the computer clipboard. If the text contains a link, it will be automatically opened in the default browser.
+
+The core of improving efficiency is reducing steps and reducing choices. Sending text to a computer almost certainly means copying it to the clipboard, and sending a link to a computer almost certainly means opening it in a browser. LemonPush was developed based on these assumptions.
+
+## Development Technology
+
+The computer side converts the clipboard interface into an HTTP service. Information exchange is achieved through a LAN-based HTTP service, and the computer-side program is implemented using the Go language.
 
 ## Known Issues
-Due to the author's development level, there are still many imperfections in the software. For example, the content transmitted is not encrypted and there are security issues. Except for someone deliberately attacking in the local area network, it is safe under most scenarios.
 
-Please do not download software from third-party platforms. The project code is open source, and the software downloaded from third-party platforms may be added with malicious code, causing information leakage.
+Limited by the author's development level, there are still many areas of the software that need refinement. For example, the transmission content is not encrypted, which poses a security risk. However, it is safe for most scenarios, unless someone actively attacks within the local network.
 
-## Feedback and Suggestions
-Feedback and suggestions are welcome at TXC.
+Please do not download the software from third-party platforms. The project code is open source, and downloading and using software from third-party platforms might introduce malicious code, leading to information leakage.
 
-[https://support.qq.com/products/405982 ↗](https://support.qq.com/products/405982)
+## Cloud Drive Download
 
-Telegram Group
+Cloud drive download link: [https://pan.quark.cn/s/077a3ded98a5](https://pan.quark.cn/s/077a3ded98a5)
 
-[Telegram ↗](https://t.me/+ZVIwHSBOg1o5NzFl)
+## Release Download
 
-## Support the Developer
-If LemonPush has been helpful to you, feel free to star, PR, feedback, share, donate to support the developer.
-
-![zw](https://raw.githubusercontent.com/ishare20/lemonPush/master/docs/static/img/zw.jpg)
+Please go to the release page to download the latest version: [Release Page](https://github.com/lemon-codehub/lemonPush/releases)

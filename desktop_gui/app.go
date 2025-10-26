@@ -50,7 +50,7 @@ type Config struct {
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
-	getTray(ctx)
+	getTray(ctx) // 初始化托盘（macOS 系统不初始化，会构建失败，Windows 开启）
 	a.ctx = ctx
 	actx = ctx
 	err := xClipboard.Init()

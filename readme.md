@@ -93,12 +93,9 @@ LemonPush is an efficient tool for pushing text from your mobile device to your 
 
 请不要从第三方平台下载软件，本项目代码开源，第三方平台的软件下载使用可能会被加入恶意代码导致信息泄露
 
-## 建议反馈
+## 网盘下载
+网盘下载地址：https://pan.quark.cn/s/077a3ded98a5
 
-电报群
+## release 下载
+请前往 release 页面下载最新版本：[release 页面](https://github.com/lemon-codehub/lemonPush/releases)
 
-[Telegram](https://t.me/+ZVIwHSBOg1o5NzFl)
-
-微信订阅号
-
-![wx](https://img.lemontree.one/i/2025/10/25/gox6fu.jpg)
