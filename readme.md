@@ -7,7 +7,6 @@ LemonPush is an efficient tool for pushing text from your mobile device to your 
 
 ![](https://raw.githubusercontent.com/lemon-codehub/lemonPush/refs/heads/master/docs/static/img/lemonpush.jpg)
 
-![lemonpush](https://lemontree.one/sibtools/lemon_push/img/lemonpush.jpg)
 
 ## [下载地址(包含iOS快捷指令)](https://lemontree.one/sibtools/lemon_push/docs/download)
 
