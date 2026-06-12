@@ -18,38 +18,50 @@ import (
 
 	qrcodeTerminal "github.com/Baozisoftware/qrcode-terminal-go"
 	"github.com/atotto/clipboard"
-	xClipboard "golang.design/x/clipboard"
 )
 
 // 声明版本变量，用于构建过程中通过ldflags设置
 var version string
 
 var dt = time.Now()
-var folder = "./_lemon_"
-var auto_open_url = "open"
+
+// Config 应用配置结构体
+type Config struct {
+	Ip            string `json:"ip"`
+	Port          int    `json:"port"`
+	Auto_open_url bool   `json:"auto_open_url"`
+	Folder        string `json:"folder"`
+}
+
+var config Config = Config{
+	Ip:            "",
+	Port:          14756,
+	Auto_open_url: true,
+	Folder:        "./_lemon_",
+}
 
 func main() {
 	http.HandleFunc("/set_clipboard", setClipboard)
 	http.HandleFunc("/get_clipboard", getClipboard)
 	http.HandleFunc("/download", download)
 	http.HandleFunc("/upload", upload)
-	config, lerr := loadConfigFile("lemon_push.conf")
+	http.HandleFunc("/ping", ping)
+
+	loadedConfig, lerr := initConfig("lemon_push.conf")
 	if lerr != nil {
 		fmt.Println("加载配置lemon_push.conf失败:", lerr)
 		return
 	}
-	port := ":" + config["port"]            // 监听端口
-	selectedIP := config["ip"]              // ip地址
-	folder = config["folder"]               // 文件夹
-	auto_open_url = config["auto_open_url"] // 自动使用默认浏览器打开url
-	if folder != "" {
-		createFolderIfNotExists(folder)
-	}
-	if auto_open_url == "" { //存在配置但没有字段值时
-		auto_open_url = "open"
+	config = loadedConfig
+
+	port := ":" + strconv.Itoa(config.Port) // 监听端口
+	selectedIP := config.Ip                  // ip地址
+
+	if config.Folder != "" {
+		createFolderIfNotExists(config.Folder)
 	}
 
-	fmt.Println(dt.Format("2006-01-02 15:04:05"), "  服务端监听端口:", config["port"])
+	fmt.Println(dt.Format("2006-01-02 15:04:05"), "  服务端监听端口:", config.Port)
 
 	if selectedIP == "" {
 		localIPs := getLocalIP()
@@ -97,7 +109,6 @@ func getLocalIP() []string {
 		// 检查ip地址判断是否回环地址
 		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			if ipnet.IP.To4() != nil {
-				// fmt.Println(dt.Format("2006-01-02 15:04:05"), "  本机IP:", ipnet.IP.String())
 				ips = append(ips, ipnet.IP.String())
 			}
 		}
@@ -125,7 +136,7 @@ func setClipboard(w http.ResponseWriter, r *http.Request) {
 	code := values.Get("text")
 	clipboard.WriteAll(code)
 	fmt.Println("客户端 " + r.RemoteAddr + " 设置剪切板：" + code)
-	if auto_open_url == "open" {
+	if config.Auto_open_url {
 		p := regexp.MustCompile(`https?://[^\s]+/[^/]+`)
 		if p.MatchString(code) {
 			matches := p.FindAllString(code, -1)
@@ -151,10 +162,9 @@ func setClipboard(w http.ResponseWriter, r *http.Request) {
 func getClipboard(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	resp := make(map[string]string)
-	//text, _ := clipboard.ReadAll()
-	text := xClipboard.Read(xClipboard.FmtText)
-	fmt.Println("客户端 " + r.RemoteAddr + " 获取剪切板：" + string(text))
-	resp["data"] = string(text)
+	text, _ := clipboard.ReadAll()
+	fmt.Println("客户端 " + r.RemoteAddr + " 获取剪切板：" + text)
+	resp["data"] = text
 	resp["code"] = "0"
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {
@@ -166,7 +176,7 @@ func getClipboard(w http.ResponseWriter, r *http.Request) {
 func download(w http.ResponseWriter, r *http.Request) {
 	values := r.URL.Query()
 	fileName := values.Get("filename")
-	folderPath := folder
+	folderPath := config.Folder
 
 	fmt.Println("客户端 " + r.RemoteAddr + " 下载文件：" + fileName)
 	separator := string(filepath.Separator)
@@ -211,7 +221,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("MIME类型: " + handler.Header.Get("Content-Type"))
 	// 创建一个目标文件
 	separator := string(filepath.Separator)
-	targetFile, err := os.Create(folder + separator + handler.Filename)
+	targetFile, err := os.Create(config.Folder + separator + handler.Filename)
 	fmt.Println("文件路径: " + targetFile.Name())
 	if err != nil {
 		fmt.Println(err)
@@ -237,6 +247,23 @@ func upload(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonResp)
 }
 
+// ping 健康检查端点
+func ping(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("客户端 " + r.RemoteAddr + " 在线检测")
+	w.Header().Set("Content-Type", "application/json")
+	resp := make(map[string]interface{})
+	resp["code"] = 0
+	resp["msg"] = "pong"
+	resp["timestamp"] = time.Now().Unix()
+	resp["service"] = "lemon_push"
+	jsonResp, err := json.Marshal(resp)
+	if err != nil {
+		http.Error(w, "JSON编码错误", http.StatusInternalServerError)
+		return
+	}
+	w.Write(jsonResp)
+}
+
 func createFolderIfNotExists(folderPath string) error {
 	_, err := os.Stat(folderPath)
 	if os.IsNotExist(err) {
@@ -251,10 +278,11 @@ func createFolderIfNotExists(folderPath string) error {
 	return nil
 }
 
-func loadConfigFile(filename string) (map[string]string, error) {
+// initConfig 初始化配置（与 GUI 版本对齐，使用类型化 Config 结构体）
+func initConfig(filename string) (Config, error) {
 	execPath, err := os.Executable()
 	if err != nil {
-		return nil, err
+		return Config{}, err
 	}
 	execDir := filepath.Dir(execPath)
 	filePath := filepath.Join(execDir, filename)
@@ -262,33 +290,38 @@ func loadConfigFile(filename string) (map[string]string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		// 文件不存在，使用默认配置并创建文件
-		config := make(map[string]string)
-		config["port"] = "14756"
-		config["folder"] = "./_lemon_"
-		config["ip"] = ""
-		config["auto_open_url"] = "open"
+		defaultConfig := Config{
+			Port:          14756,
+			Folder:        "./_lemon_",
+			Ip:            "",
+			Auto_open_url: true,
+		}
 
 		// 创建文件并写入默认配置
 		file, err = os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
 		if err != nil {
-			return nil, err
+			return Config{}, err
 		}
 		defer file.Close()
 
+		boolStr := "false"
+		if defaultConfig.Auto_open_url {
+			boolStr = "true"
+		}
+
 		writer := bufio.NewWriter(file)
-		for key, value := range config {
-			_, err := writer.WriteString(key + "=" + value + "\n")
-			if err != nil {
-				return nil, err
-			}
+		_, err := writer.WriteString(fmt.Sprintf("ip=%s\nport=%d\nauto_open_url=%s\nfolder=%s\n",
+			defaultConfig.Ip, defaultConfig.Port, boolStr, defaultConfig.Folder))
+		if err != nil {
+			return Config{}, err
 		}
 		writer.Flush()
 
-		return config, nil
+		return defaultConfig, nil
 	}
 	defer file.Close()
 
-	config := make(map[string]string)
+	var cfg Config
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -296,13 +329,34 @@ func loadConfigFile(filename string) (map[string]string, error) {
 		if len(parts) == 2 {
 			key := strings.TrimSpace(parts[0])
 			value := strings.TrimSpace(parts[1])
-			config[key] = value
+
+			switch key {
+			case "ip":
+				cfg.Ip = value
+			case "port":
+				port, err := strconv.Atoi(value)
+				if err != nil {
+					return Config{}, fmt.Errorf("invalid port value: %s", value)
+				}
+				cfg.Port = port
+			case "auto_open_url":
+				// 兼容旧配置（"open" 字符串）和新配置（"true"/"false"）
+				b, err := strconv.ParseBool(value)
+				if err != nil {
+					// 旧版兼容: "open" 视为 true, 其他视为 false
+					cfg.Auto_open_url = value == "open"
+				} else {
+					cfg.Auto_open_url = b
+				}
+			case "folder":
+				cfg.Folder = value
+			}
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
-		return nil, err
+		return Config{}, err
 	}
 
-	return config, nil
+	return cfg, nil
 }

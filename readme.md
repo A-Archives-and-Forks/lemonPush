@@ -5,7 +5,7 @@
 
 LemonPush is an efficient tool for pushing text from your mobile device to your computer's clipboard under the same WiFi environment. It supports Android and iOS on the mobile side, and Windows, Mac, and Linux platforms on the computer side.
 
-![](https://lemontree.one/sibtools/lemon_push/img/gui_v1.0.5.1.png)
+![](https://raw.githubusercontent.com/lemon-codehub/lemonPush/refs/heads/master/docs/static/img/lemonpush.jpg)
 
 ![lemonpush](https://lemontree.one/sibtools/lemon_push/img/lemonpush.jpg)
 
